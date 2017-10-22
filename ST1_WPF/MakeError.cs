@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ST1_WPF
 {
-    class MakeError
+    static class MakeError
     {
         private static Random _rnd;
 

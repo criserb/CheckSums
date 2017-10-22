@@ -17,12 +17,12 @@ using System.Windows.Shapes;
 
 namespace ST1_WPF
 {
-    public static class ParityBit
+    static class ParityBit
     {
         /// <summary>
         /// 0 - is parity, 1 - isn't parity
         /// </summary>
-        public static int SumOf1(byte[] fileData)
+        private static int SumOf1(byte[] fileData)
         {
             int sum = 0;
             byte k;

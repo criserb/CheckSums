@@ -57,6 +57,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Crc.cs" />
     <Compile Include="Point.cs" />
     <Compile Include="MakeError.cs" />
     <Compile Include="SumModulo.cs" />

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ST1_WPF
 {
-    class SumModulo
+    static class SumModulo
     {
         private static byte Sum(byte[] fileData)
         {

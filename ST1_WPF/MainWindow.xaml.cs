@@ -154,7 +154,6 @@ namespace ST1_WPF
                 AppendToTextBox("Błąd: " + percentError * 100 + '%');
 
                 errors = Convert.ToInt32(percentError * FileData.Length);
-                MakeError MakeError = new MakeError();
                 // Otwarcie dialogu wyboru losowania błędów z powtórzeniami lub bez powtórzeń
                 if (MessageBox.Show("Losowanie błędów z powtórzeniami? ",
                      "Losowanie błędów", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
@@ -195,8 +194,13 @@ namespace ST1_WPF
             Choice = Algorithm.modulo;
         }
 
-        private void Button_crc_Click(object sender, RoutedEventArgs e)
+        private async void Button_crc_Click(object sender, RoutedEventArgs e)
         {
+            lbl_progress.Content = "Proszę czekać. Obliczam . . .";
+            ToSaveCrc = await Crc.Check(FileData);
+            lbl_progress.Content = String.Empty;
+            AppendToTextBox($"Operacja zakończona sukcesem! Końcowy bajt: {ToSaveOthers}. " +
+                $"Hex: {Convert.ToString(ToSaveOthers, 16)}");
             Choice = Algorithm.crc;
         }
 
