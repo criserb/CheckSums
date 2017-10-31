@@ -12,13 +12,15 @@ namespace ST1_WPF
         {
             byte temp = fileData[0];
 
-            for (int i = 1; i < 10; i++)
+            for (int i = 1; i < fileData.Length; i++)
             {
                 temp ^= fileData[i];
             }
 
             return temp;
         }
+
+        // Uruchamianie funkcji obliczania sumy modulo asynchronicznie
         public static Task<byte> Check(byte[] fileData)
         {
             return Task.Factory.StartNew(() => Sum(fileData));

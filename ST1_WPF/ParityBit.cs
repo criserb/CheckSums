@@ -50,6 +50,8 @@ namespace ST1_WPF
 
             return sum;
         }
+
+        // Uruchamianie funkcji obliczania bitu parzystości asynchronicznie
         public static Task<int> Check(byte[] fileData)
         {
             return Task.Factory.StartNew(() => ParityBit.SumOf1(fileData));

@@ -23,6 +23,7 @@ namespace ST1_WPF
     /// </summary>
     public partial class MainWindow : Window
     {
+        // Algorytmy do wyboru (potrzebne przy zapisywaniu do pliku)
         public enum Algorithm
         {
             parity,
@@ -33,33 +34,25 @@ namespace ST1_WPF
         public byte[] FileData { get; set; }
         public byte[] ToSaveCrc { get; set; }
         public byte ToSaveOthers { get; set; }
-        public Algorithm Choice { get; set; }
+        public Algorithm? Choice { get; set; }
 
         public MainWindow()
         {
             InitializeComponent();
         }
-        /// <summary>
-        /// Otwieranie pliku
-        /// </summary>
+        // Otwieranie pliku
         private void OpenFile()
         {
-            FileData = null;
             // Configure open file dialog box
             OpenFileDialog dlg = new OpenFileDialog
             {
-                // Set initial directory
+                // Ustawiania katalogu inicjalizującego
                 InitialDirectory = Directory.GetCurrentDirectory()
             };
 
-            // Show open file dialog box
+            // Pokazanie dialogu wyboru pliku
             bool? result = dlg.ShowDialog();
 
-            // Process open file dialog box results
-            // if (result == true)
-            // {
-            // Open document
-            //}
             try
             {
                 using (FileStream fileStream = new FileStream(dlg.FileName, FileMode.Open))
@@ -69,23 +62,23 @@ namespace ST1_WPF
                         FileData = binaryReader.ReadBytes((int)fileStream.Length);
                     }
                 }
-                AppendToTextBox("Pomyślnie otwarto plik o nazwie: " + dlg.SafeFileName);
-                AppendToTextBox("Rozmiar pliku: " + FileData.Length + " bajtów");
+                AppendToConsole("Pomyślnie otwarto plik o nazwie: " + dlg.SafeFileName);
+                AppendToConsole("Rozmiar pliku: " + FileData.Length + " bajtów");
                 lbl_file_in_memory.Content = dlg.SafeFileName;
                 MakeButtonsVisible();
             }
             catch (Exception ex)
             {
-                AppendToTextBox(ex.Message);
+                AppendToConsole(ex.Message);
             }
         }
         /// <summary>
-        /// Dodawanie wpisów do textboxa (wyświetlanie informacji o aktualnych operacjach w programie)
+        /// Dodawanie wpisów do konsoli textBox (wyświetlanie informacji o aktualnych operacjach w programie)
         /// </summary>
         /// <param name="s"> Wiadomość </param>
-        protected void AppendToTextBox(string s)
+        protected void AppendToConsole(string s)
         {
-            textBox.Text += $"{DateTime.Now.ToLongTimeString()}: {s} \n";
+            textBoxConsole.Text += $"{DateTime.Now.ToLongTimeString()}: {s} \n";
         }
         /// <summary>
         /// Asynchroniczny zapis danych do pliku
@@ -94,19 +87,21 @@ namespace ST1_WPF
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog
             {
+                // Ustawianie filtrów zapisu plików (będzie do wyboru zapis do .txt i dowolnego formatu)
                 Filter = "Text file (*.txt)|*.txt|All files (*.*)|*.*"
             };
+            // Jeśli stworzymy plik do zapisu, czyli klikniemy 'zapisz'
             if (saveFileDialog.ShowDialog() == true)
             {
-                lbl_progress.Content = "Processing. Please wait . . .";
+                lblProgress.Content = "Processing. Please wait . . .";
                 using (FileStream fileStream = File.Open(saveFileDialog.FileName, FileMode.OpenOrCreate))
                 {
+                    // Zapisywanie ciągu danych do pliku
                     await fileStream.WriteAsync(FileData, 0, FileData.Length);
+                    // Zapisywanie wyniku danej operacji
                     switch (Choice)
                     {
                         case Algorithm.parity:
-                            fileStream.WriteByte(ToSaveOthers);
-                            break;
                         case Algorithm.modulo:
                             fileStream.WriteByte(ToSaveOthers);
                             break;
@@ -116,34 +111,59 @@ namespace ST1_WPF
                         default:
                             break;
                     }
+                    Choice = null;
                 }
             }
-            lbl_progress.Content = String.Empty;
-            AppendToTextBox("Pomyślnie zapisano plik o nazwie: " + saveFileDialog.SafeFileName);
+            lblProgress.Content = String.Empty;
+            AppendToConsole("Pomyślnie zapisano plik o nazwie: " + saveFileDialog.SafeFileName);
         }
-        /// <summary>
-        /// Włączenie widoczności przycisków do wyboru algorytmu
-        /// </summary>
+
+        // Włączenie widoczności przycisków do wyboru algorytmu po wczytaniu pliku
         private void MakeButtonsVisible()
         {
-            button_parity.IsEnabled = true;
-            button_crc.IsEnabled = true;
-            button_modulo.IsEnabled = true;
-            button_save.IsEnabled = true;
-            button_makeError.IsEnabled = true;
+            buttonParity.IsEnabled = true;
+            buttonCrc.IsEnabled = true;
+            buttonModulo.IsEnabled = true;
+            buttonSave.IsEnabled = true;
+            buttonMakeError.IsEnabled = true;
         }
-        /// <summary>
-        /// Przycisk odpowiadający za zaburzanie błędów
-        /// </summary>
-        private async void Button_makeError_Click(object sender, RoutedEventArgs e)
+
+        // Obliczanie bitu parzystości
+        private async void Button_parity_Click(object sender, RoutedEventArgs e)
+        {
+            lblProgress.Content = "Proszę czekać. Obliczam . . .";
+            int sum = await ParityBit.Check(FileData);
+            lblProgress.Content = String.Empty;
+            ToSaveOthers = Convert.ToByte(sum % 2);
+            AppendToConsole($"Operacja zakończona sukcesem! Ilość jedynek w pliku: {sum}. " +
+           $"Bit parzystości: {sum % 2}");
+            Choice = Algorithm.parity;
+        }
+
+        // Obliczanie sumy modulo
+        private async void Button_modulo_Click(object sender, RoutedEventArgs e)
+        {
+            lblProgress.Content = "Proszę czekać. Obliczam . . .";
+            ToSaveOthers = await SumModulo.Check(FileData);
+            lblProgress.Content = String.Empty;
+            AppendToConsole($"Operacja zakończona sukcesem! Końcowy bajt: {ToSaveOthers}. " +
+                $"Binarnie: {Convert.ToString(ToSaveOthers, 2)}");
+            Choice = Algorithm.modulo;
+        }
+
+        // Przycisk włączający menu do zaburzania błędów
+        private void Button_makeError_Click(object sender, RoutedEventArgs e)
+        {
+            Operations.Visibility = Visibility.Hidden;
+            Errors.Visibility = Visibility.Visible;
+        }
+
+        private async void Button_continue_error_Click(object sender, RoutedEventArgs e)
         {
             // Ilość błędów (ile bitów będzie podlegało zmianie)
             int errors;
             // Otwarcie dialogu do wpisania błędu w procentach
-            string s = Microsoft.VisualBasic.Interaction.InputBox("Wpisz ilość błędów ( 0 < błąd <= 100 ) [%]",
-                                           "Wybierz błąd",
-                                           "0,01",
-                                           -1, -1);
+            string s = textBoxError.Text;
             // Zmienna przechowująca próbę konwersji wpisanego tekstu do zmiennej double, która z kolei potrzebna
             //  jest do wyliczenia wartości procentowej
             bool result = Double.TryParse(s, out double percentError);
@@ -151,59 +171,99 @@ namespace ST1_WPF
             {
                 // Błąd w procentach
                 percentError /= 100;
-                AppendToTextBox("Błąd: " + percentError * 100 + '%');
 
                 errors = Convert.ToInt32(percentError * FileData.Length);
-                // Otwarcie dialogu wyboru losowania błędów z powtórzeniami lub bez powtórzeń
-                if (MessageBox.Show("Losowanie błędów z powtórzeniami? ",
-                     "Losowanie błędów", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                // Wybór błędów z powtórzeniami lub bez powtórzeń
+                if (radio_button_repeats.IsChecked == true)
                 {
-                    lbl_progress.Content = "Proszę czekać. Obliczam . . .";
+                    lblProgress.Content = "Proszę czekać. Obliczam . . .";
+                    // Obliczanie błędów z powtórzeniami
                     FileData = await MakeError.WRepeats(FileData, errors);
                 }
                 else
                 {
-                    lbl_progress.Content = "Proszę czekać. Obliczam . . .";
+                    lblProgress.Content = "Proszę czekać. Obliczam . . .";
+                    // Obliczanie błędów bez powtórzeń
                     FileData = await MakeError.WNRepeats(FileData, errors);
                 }
-                lbl_progress.Content = String.Empty;
-                AppendToTextBox("Operacja zakończona sukcesem!");
+                Operations.Visibility = Visibility.Visible;
+                Errors.Visibility = Visibility.Hidden;
+                lblProgress.Content = String.Empty;
+                AppendToConsole("Błąd: " + percentError * 100 + '%' + ". Operacja zakończona sukcesem!");
             }
             else
-                AppendToTextBox("Błąd podczas wpisywania wartości procentowej błędu! Spróbuj jeszcze raz!");
+                AppendToConsole("Błąd podczas wpisywania wartości procentowej błędu! Spróbuj jeszcze raz!");
         }
 
-        private async void Button_parity_Click(object sender, RoutedEventArgs e)
+        private void Button_back_error_Click(object sender, RoutedEventArgs e)
         {
-            lbl_progress.Content = "Proszę czekać. Obliczam . . .";
-            int sum = await ParityBit.Check(FileData);
-            lbl_progress.Content = String.Empty;
-            ToSaveOthers = Convert.ToByte(sum % 2);
-            AppendToTextBox($"Operacja zakończona sukcesem! Ilość jedynek w pliku: {sum}. " +
-           $"Bit parzystości: {sum % 2}");
-            Choice = Algorithm.parity;
+            Operations.Visibility = Visibility.Visible;
+            Errors.Visibility = Visibility.Hidden;
         }
 
-        private async void Button_modulo_Click(object sender, RoutedEventArgs e)
+        private UInt64 BinToDec(string s)
         {
-            lbl_progress.Content = "Proszę czekać. Obliczam . . .";
-            ToSaveOthers = await SumModulo.Check(FileData);
-            lbl_progress.Content = String.Empty;
-            AppendToTextBox($"Operacja zakończona sukcesem! Końcowy bajt: {ToSaveOthers}. " +
-                $"Binarnie: {Convert.ToString(ToSaveOthers,2)}");
-            Choice = Algorithm.modulo;
+            int j = 0;
+            UInt64 dec = 0;
+            for (int i = textBoxPolynomial.Text.Length - 1; i >= 0; i--)
+            {
+                if (textBoxPolynomial.Text[i] == '1')
+                {
+                    dec += (UInt64)Math.Pow(2, j);
+                }
+                j++;
+            }
+            return dec;
         }
 
-        private async void Button_crc_Click(object sender, RoutedEventArgs e)
+        private async void Button_continue_crc_Click(object sender, RoutedEventArgs e)
         {
-            lbl_progress.Content = "Proszę czekać. Obliczam . . .";
-            ToSaveCrc = await Crc.Check(FileData);
-            lbl_progress.Content = String.Empty;
-            AppendToTextBox($"Operacja zakończona sukcesem! Końcowy bajt: {ToSaveOthers}. " +
-                $"Hex: {Convert.ToString(ToSaveOthers, 16)}");
+            CrcGrid.Visibility = Visibility.Hidden;
+            AlgorithmGrid.Visibility = Visibility.Visible;
+            string binPol = textBoxPolynomial.Text;
+            UInt64 pol = BinToDec(binPol);
+
+            AppendToConsole("BinToDecPol: " + pol.ToString());
+
+            // zeby zapisac UInt64 do byte[]
+
+            lblProgress.Content = "Proszę czekać. Obliczam . . .";
+            UInt64 crc = await Crc.Check(FileData, pol);
+            // Długość ciągu binarnego ostatnie bajtu
+            int lastByteLength = 8 - (Convert.ToString(FileData[FileData.Length - 1], 2).Length);
+            // Długość całego ciągu danych (binarnie)
+            int dataLength = (FileData.Length * 8) - lastByteLength;
+
+            // znalezc zwiazek ile razy sie przesunie
+            AppendToConsole($"Długość FileData: {dataLength}. " +
+                $"Długość wielomanu: {binPol.Length}");
+            AppendToConsole($"Ile razy się przesunie: {FileData.Length * 8 - binPol.Length}");
+
+            foreach (var item in FileData)
+            {
+                AppendToConsole(Convert.ToString(item, 2));
+            }
+
+            lblProgress.Content = String.Empty;
+            AppendToConsole($"Operacja zakończona sukcesem! Crc wynosi: {crc}. Binarnie: {Convert.ToString((long)crc, 2)}." +
+                $" Hexadecymalnie: {Convert.ToString((long)crc, 16)}");
             Choice = Algorithm.crc;
         }
 
+        private void Button_back_crc_Click(object sender, RoutedEventArgs e)
+        {
+            CrcGrid.Visibility = Visibility.Hidden;
+            AlgorithmGrid.Visibility = Visibility.Visible;
+        }
+
+        // Włączenie menu do wpisania wielomianu crc
+        private void Button_crc_Click(object sender, RoutedEventArgs e)
+        {
+            CrcGrid.Visibility = Visibility.Visible;
+            AlgorithmGrid.Visibility = Visibility.Hidden;
+        }
+
+        // Otwarcie pliku
         private void Button_open_Click(object sender, RoutedEventArgs e)
         {
             OpenFile();

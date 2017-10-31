@@ -8,18 +8,37 @@
         Title="MainWindow" Height="490" Width="730">
     <Grid>
         <Grid x:Name="Menu" Margin="0,0,0,245">
-            <Button x:Name="button_parity" Content="Bit parzystości" HorizontalAlignment="Left" Margin="41,60,0,0" VerticalAlignment="Top" Width="177" RenderTransformOrigin="1.115,0.583" Height="45" Click="Button_parity_Click" IsEnabled="False"/>
-            <Button x:Name="button_modulo" Content="Suma modulo" HorizontalAlignment="Left" Margin="41,105,0,0" VerticalAlignment="Top" Width="177" RenderTransformOrigin="1.115,0.583" Height="45" Click="Button_modulo_Click" IsEnabled="False"/>
-            <Button x:Name="button_crc" Content="Cykliczny kod nadmiarowy (CRC)" HorizontalAlignment="Left" Margin="41,150,0,0" VerticalAlignment="Top" Width="177" RenderTransformOrigin="1.115,0.583" Height="45" Click="Button_crc_Click" IsEnabled="False"/>
             <Label x:Name="label" Content="Algorytm" HorizontalAlignment="Left" Margin="41,32,0,0" VerticalAlignment="Top" FontSize="14" Height="28" Width="177" FontWeight="Bold" HorizontalContentAlignment="Center"/>
             <Label x:Name="lbl" Content="Plik w pamięci: " HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top" Height="27" Width="91"/>
             <Label x:Name="lbl_file_in_memory" Content="" HorizontalAlignment="Left" Margin="101,0,0,0" VerticalAlignment="Top" Height="27" Width="608"/>
-            <Button x:Name="button_save" Content="Zapisz do pliku" HorizontalAlignment="Left" Margin="501,105,0,0" VerticalAlignment="Top" Width="177" Click="Button_save_Click" Height="45" IsEnabled="False"/>
-            <Button x:Name="button_open" Content="Wczytaj plik" HorizontalAlignment="Left" Margin="501,60,0,0" VerticalAlignment="Top" Width="177" Click="Button_open_Click" Height="45"/>
-            <Button x:Name="button_makeError" Content="Zaburz dane" HorizontalAlignment="Left" Margin="501,150,0,0" VerticalAlignment="Top" Width="177" Click="Button_makeError_Click" Height="45" IsEnabled="False"/>
             <Label x:Name="label_Copy1" Content="Operacje" HorizontalAlignment="Left" Margin="501,32,0,0" VerticalAlignment="Top" FontSize="14" Height="28" Width="177" FontWeight="Bold" HorizontalContentAlignment="Center"/>
-            <Label x:Name="lbl_progress" Content="" HorizontalAlignment="Left" Margin="251,167,0,0" VerticalAlignment="Top" Width="220" Height="28" FontSize="14" HorizontalContentAlignment="Center"/>
+            <Label x:Name="lblProgress" Content="" HorizontalAlignment="Left" Margin="251,167,0,0" VerticalAlignment="Top" Width="220" Height="28" FontSize="14" HorizontalContentAlignment="Center"/>
         </Grid>
-        <TextBox x:Name="textBox" HorizontalAlignment="Left" Height="240" Margin="0,214,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="719" VerticalScrollBarVisibility="Auto"/>
+        <Grid x:Name="AlgorithmGrid" Margin="0,0,0,245">
+            <Button x:Name="buttonParity" Content="Bit parzystości" HorizontalAlignment="Left" Margin="41,60,0,0" VerticalAlignment="Top" Width="177" RenderTransformOrigin="1.115,0.583" Height="45" Click="Button_parity_Click" IsEnabled="False"/>
+            <Button x:Name="buttonModulo" Content="Suma modulo" HorizontalAlignment="Left" Margin="41,105,0,0" VerticalAlignment="Top" Width="177" RenderTransformOrigin="1.115,0.583" Height="45" Click="Button_modulo_Click" IsEnabled="False"/>
+            <Button x:Name="buttonCrc" Content="Cykliczny kod nadmiarowy (CRC)" HorizontalAlignment="Left" Margin="41,150,0,0" VerticalAlignment="Top" Width="177" RenderTransformOrigin="1.115,0.583" Height="45" Click="Button_crc_Click" IsEnabled="False"/>
+        </Grid>
+        <Grid x:Name="Operations" Margin="0,0,0,245" >
+            <Button x:Name="buttonSave" Content="Zapisz do pliku" HorizontalAlignment="Left" Margin="501,105,0,0" VerticalAlignment="Top" Width="177" Click="Button_save_Click" Height="45" IsEnabled="False"/>
+            <Button x:Name="button_open" Content="Wczytaj plik" HorizontalAlignment="Left" Margin="501,60,0,0" VerticalAlignment="Top" Width="177" Click="Button_open_Click" Height="45"/>
+            <Button x:Name="buttonMakeError" Content="Zaburz dane" HorizontalAlignment="Left" Margin="501,150,0,0" Width="177" Click="Button_makeError_Click" Height="45" IsEnabled="False" VerticalAlignment="Top"/>
+        </Grid>
+        <Grid x:Name="Errors" Margin="0,0,0,245" Visibility="Hidden">
+            <RadioButton x:Name="radio_button_repeats" Content="Bez powtórzeń" HorizontalAlignment="Left" Margin="501,109,0,0" VerticalAlignment="Top"/>
+            <RadioButton x:Name="radio_button_no_repeats" Content="Z powtorzeniami" HorizontalAlignment="Left" Margin="501,129,0,0" VerticalAlignment="Top" IsChecked="True"/>
+            <Button x:Name="button_continue" Content="Dalej" HorizontalAlignment="Left" Margin="501,149,0,0" VerticalAlignment="Top" Width="177" Height="23" Click="Button_continue_error_Click"/>
+            <Button x:Name="button_back" Content="Wróć" HorizontalAlignment="Left" Margin="501,172,0,0" Width="177" Click="Button_back_error_Click" Height="23" VerticalAlignment="Top"/>
+            <TextBox x:Name="textBoxError" HorizontalAlignment="Left" Height="23" Margin="501,86,0,0" TextWrapping="Wrap" Text="0,01" VerticalAlignment="Top" Width="177"/>
+            <Label Content="Wpisz błąd w % (0,100)" HorizontalAlignment="Left" Margin="501,60,0,0" VerticalAlignment="Top" Width="177"/>
+        </Grid>
+        <Grid x:Name="CrcGrid" Margin="0,0,0,245" Visibility="Hidden">
+            <!--wpisywanie wielomianu w postaci 0/1-->
+            <TextBox x:Name="textBoxPolynomial" HorizontalAlignment="Left" Height="45" Margin="41,105,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="177" Text="" />
+            <Button x:Name="button_continue_algorithm" Content="Dalej" HorizontalAlignment="Left" Margin="41,149,0,0" VerticalAlignment="Top" Width="177" Height="23" Click="Button_continue_crc_Click"/>
+            <Button x:Name="button_back_algorithm" Content="Wróć" HorizontalAlignment="Left" Margin="41,172,0,0" Width="177" Click="Button_back_crc_Click" Height="23" VerticalAlignment="Top"/>
+            <TextBox TextAlignment="Center" TextWrapping="Wrap" Text="Wpisz poniżej wielomian w postaci binarnej" Margin="41,60,0,0" IsReadOnly="True" Height="45" VerticalAlignment="Top" HorizontalAlignment="Left" Width="177" BorderThickness="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+        </Grid>
+        <TextBox x:Name="textBoxConsole" HorizontalAlignment="Left" Height="240" Margin="0,214,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="719" VerticalScrollBarVisibility="Auto" IsReadOnly="True"/>
     </Grid>
 </Window>
