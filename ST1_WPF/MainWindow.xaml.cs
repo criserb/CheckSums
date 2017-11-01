@@ -220,34 +220,113 @@ namespace ST1_WPF
         {
             CrcGrid.Visibility = Visibility.Hidden;
             AlgorithmGrid.Visibility = Visibility.Visible;
-            string binPol = textBoxPolynomial.Text;
-            UInt64 pol = BinToDec(binPol);
 
-            AppendToConsole("BinToDecPol: " + pol.ToString());
 
-            // zeby zapisac UInt64 do byte[]
+            string polString = textBoxPolynomial.Text;
+            UInt64 pol = BinToDec(polString);
 
-            lblProgress.Content = "Proszę czekać. Obliczam . . .";
-            UInt64 crc = await Crc.Check(FileData, pol);
-            // Długość ciągu binarnego ostatnie bajtu
-            int lastByteLength = 8 - (Convert.ToString(FileData[FileData.Length - 1], 2).Length);
-            // Długość całego ciągu danych (binarnie)
-            int dataLength = (FileData.Length * 8) - lastByteLength;
+            //AppendToConsole("BinToDecPol: " + pol.ToString());
 
-            // znalezc zwiazek ile razy sie przesunie
-            AppendToConsole($"Długość FileData: {dataLength}. " +
-                $"Długość wielomanu: {binPol.Length}");
-            AppendToConsole($"Ile razy się przesunie: {FileData.Length * 8 - binPol.Length}");
+            //// zeby zapisac UInt64 do byte[]
 
-            foreach (var item in FileData)
+            //lblProgress.Content = "Proszę czekać. Obliczam . . .";
+            //// UInt64 crc = await Crc.Check(FileData, pol);
+            //// Długość ciągu binarnego ostatnie bajtu
+            //int lastByteLength = 8 - (Convert.ToString(FileData[FileData.Length - 1], 2).Length);
+            //// Długość całego ciągu danych (binarnie)
+            //int dataLength = (FileData.Length * 8) - lastByteLength;
+
+            //AppendToConsole($"Długość FileData: {dataLength}. " +
+            //    $"Długość wielomanu: {binPol.Length}");
+
+            //AppendToConsole("FileData Binarnie:");
+            //foreach (var item in FileData)
+            //{
+            //    AppendToConsole(Convert.ToString(item, 2));
+            //}
+
+            //AppendToConsole("Wielomian: " + Convert.ToString((long)pol, 2));
+
+            // ------------- PROBA NA STRINGACH ------------- //
+
+            lblProgress.Content = "Proszę czekać . . .";
+            string dataBinString = await GenerateDataString(FileData);
+            for (int i = 0; i < polString.Length - 1; i++)
             {
-                AppendToConsole(Convert.ToString(item, 2));
+                dataBinString += '0';
+            }
+            lblProgress.Content = String.Empty;
+
+            int indicator = 0;
+
+            for (int i = 0; i < dataBinString.Length; i++)
+            {
+                if (dataBinString[i] == '1')
+                {
+                    indicator = i;
+                }
+                else
+                {
+                    dataBinString.Remove(i, 1);
+                }
             }
 
-            lblProgress.Content = String.Empty;
-            AppendToConsole($"Operacja zakończona sukcesem! Crc wynosi: {crc}. Binarnie: {Convert.ToString((long)crc, 2)}." +
-                $" Hexadecymalnie: {Convert.ToString((long)crc, 16)}");
+
+            string tmp = String.Empty;
+            for (int i = 0; i < dataBinString.Length; i=i+polString.Length)
+            {
+                for (int k = i; k < polString.Length; k++)
+                {
+                    tmp += dataBinString[k];
+                }
+
+                for (int k = i; k < polString.Length; k++)
+                {
+                    if((dataBinString[k]=='1' && polString[k]=='1'))
+                    {
+                        dataBinString[k] = '0';
+                    }
+                }
+                tmp = String.Empty;
+            }
+            //UInt64 testCrc = FileData[0] ^ pol;
+            //pol >>= 1;
+
+            //AppendToConsole("testCrc krok 0: " + testCrc);
+            //AppendToConsole("testCrc krok 0 binarnie: " + Convert.ToString((long)testCrc, 2));
+            //AppendToConsole("Wielomian binarnie po przesunieciu: " + Convert.ToString((long)pol, 2));
+
+            //for (int i = 1; i < 4; i++)
+            //{
+            //    testCrc ^= pol;
+            //    pol >>= 1;
+
+            //    AppendToConsole($"testCrc krok {i}: {testCrc}");
+            //    AppendToConsole($"testCrc krok {i} binarnie: {Convert.ToString((long)testCrc, 2)}");
+            //    AppendToConsole("Wielomian binarnie po przesunieciu: " + Convert.ToString((long)pol, 2));
+            //}
+
+            //AppendToConsole("test crc: " + testCrc.ToString());
+
+            //lblProgress.Content = String.Empty;
+            //AppendToConsole($"Operacja zakończona sukcesem! Crc wynosi: {crc}. Binarnie: {Convert.ToString((long)crc, 2)}." +
+            //    $" Hexadecymalnie: {Convert.ToString((long)crc, 16)}");
             Choice = Algorithm.crc;
+        }
+
+        public static Task<string> GenerateDataString(byte[] fileData)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                string dataBinString = String.Empty;
+
+                for (int i = 0; i < fileData.Length; i++)
+                {
+                    dataBinString += Convert.ToString(fileData[i], 2);
+                }
+                return dataBinString;
+            }
+            );
         }
 
         private void Button_back_crc_Click(object sender, RoutedEventArgs e)
